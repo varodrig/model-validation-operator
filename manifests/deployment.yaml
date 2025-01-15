@@ -15,6 +15,7 @@ spec:
       labels:
         app: model-validation-controller
     spec:
+      serviceAccountName: model-validation-controller-sa
       containers:
       - name: model-validation-controller
         image: ghcr.io/miyunari/model-validation-controler:latest
