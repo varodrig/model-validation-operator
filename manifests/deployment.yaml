@@ -1,0 +1,22 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-validation-controller
+  labels:
+    app: model-validation-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: model-validation-controller
+  template:
+    metadata:
+      labels:
+        app: model-validation-controller
+    spec:
+      containers:
+      - name: model-validation-controller
+        image: ghcr.io/miyunari/model-validation-controler:latest
+        ports:
+        - containerPort: 8080
