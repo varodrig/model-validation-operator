@@ -5,6 +5,8 @@ kind: Kustomization
 resources:
  - crd.yaml
  - clusterrole.yaml
+ - service_account.yaml
+ - clusterrole_binding.yaml
  - deployment.yaml
  - mutation_webhook.yaml
  - service.yaml
