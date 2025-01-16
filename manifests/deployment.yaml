@@ -18,6 +18,6 @@ spec:
       serviceAccountName: model-validation-controller-sa
       containers:
       - name: model-validation-controller
-        image: ghcr.io/miyunari/model-validation-controler:latest
+        image: ghcr.io/miyunari/model-validation-controller:latest
         ports:
         - containerPort: 8080
