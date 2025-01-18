@@ -22,6 +22,7 @@ func main() {
 	interceptor.decoder = decoder
 
 	http.HandleFunc("/webhook", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("new request, path: /webhook")
 		if r.Method != http.MethodPost {
 			http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 			return
@@ -49,7 +50,8 @@ func main() {
 
 	// Start the server
 	log.Println("Starting webhook server on :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	folder := "/etc/admission-webhook/tls/"
+	if err := http.ListenAndServeTLS(":8080", folder+"tls.cert", folder+"tls.key", nil); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
