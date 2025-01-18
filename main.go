@@ -51,7 +51,7 @@ func main() {
 	// Start the server
 	log.Println("Starting webhook server on :8080")
 	folder := "/etc/admission-webhook/tls/"
-	if err := http.ListenAndServeTLS(":8080", folder+"tls.cert", folder+"tls.key", nil); err != nil {
+	if err := http.ListenAndServeTLS(":8080", folder+"tls.crt", folder+"tls.key", nil); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
