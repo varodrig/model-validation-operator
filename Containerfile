@@ -13,8 +13,7 @@ RUN go mod download && go mod verify
 # Build the application
 RUN CGO_ENABLED=0 go build -v -o app .
 
-# Expose the port
+FROM scratch
+COPY --from=0 /app/app /app
 EXPOSE 8080
-
-# Command to run the application
-CMD ["./app"]
+CMD ["/app"]

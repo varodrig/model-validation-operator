@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: model-validation-controller
+  namespace: model-validation-controller
   labels:
     app: model-validation-controller
 spec:
@@ -21,3 +22,10 @@ spec:
         image: ghcr.io/miyunari/model-validation-controller:latest
         ports:
         - containerPort: 8080
+        volumeMounts:
+        - name: tls
+          mountPath: "/etc/admission-webhook/tls"
+      volumes:
+      - name: tls
+        secret:
+          secretName: example-webhook-tls
