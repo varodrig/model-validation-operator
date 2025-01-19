@@ -2,23 +2,25 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
+	"github.com/go-logr/logr"
 	v1alpha1 "github.com/miyunari/model-validation-controller/api/v1alpha1"
 )
 
 // NewPodInterceptorWebhook creates a new pod mutating webhook to be registered
-func NewPodInterceptorWebhook(c client.Client) webhook.AdmissionHandler {
+func NewPodInterceptorWebhook(c client.Client, decoder admission.Decoder) webhook.AdmissionHandler {
 	return &podInterceptor{
 		client: c,
+		decoder: decoder,
 	}
 }
 
@@ -35,46 +37,68 @@ type podInterceptor struct {
 
 // Handle extends pods with Model Validation Init-Container if annotation is specified.
 func (p *podInterceptor) Handle(ctx context.Context, req admission.Request) admission.Response {
-	fmt.Println("Execute webhook")
 	logger := log.FromContext(ctx)
+	logger.Info("Execute webhook")
 	pod := &corev1.Pod{}
 
 	if err := p.decoder.Decode(req, pod); err != nil {
 		logger.Error(err, "failed to decode pod")
 		return admission.Errored(http.StatusBadRequest, err)
 	}
+	// TODO: check in webhook config
+	if v := pod.Annotations["validation.rhtas.redhat.com/ml"]; v != "true" {
+		return admission.Allowed("no annoation found, no action needed")
+	}
 
-	fmt.Println("For pod: ", pod.Name, "in namespace: ", pod.Namespace)
-
-	rhmv := &v1alpha1.ModelValidation{} // NOTE: Search for definition in Namespace.
-	if err := p.client.Get(ctx, types.NamespacedName{Name: req.Namespace}, rhmv); err != nil {
-		msg := "failed to get the ModelValidation Spec for the pod, skipping injection"
+	logger.Info("Search associated Model Validation CR", "pod", pod.Name, "namespace", pod.Namespace)
+	rhmvList := &v1alpha1.ModelValidationList{}
+	if err := p.client.List(ctx, rhmvList); err != nil {
+		msg := "failed to get the ModelValidation Spec, skipping injection"
 		logger.Error(err, msg)
 		return admission.Errored(http.StatusNotFound, err)
 	}
 
+	got := len(rhmvList.Items)
+	if got != 1 {
+		err := fmt.Errorf("got no or to many specs, expect: 1, got: %d", got)
+		logger.Error(err, "skip injection")
+		return admission.Errored(http.StatusBadRequest, err)
+	}
+	rhmv := rhmvList.Items[0]
 	// NOTE: check if validation sidecar is already injected. Then no action needed.
 	for _, c := range pod.Spec.InitContainers {
 		if c.Name == modelValidationInitContainerName {
-			return admission.Allowed("no action needed")
+			return admission.Allowed("validation exists, no action needed")
 		}
 	}
 
 	args := []string{"verify", fmt.Sprintf("--model_path=%s", rhmv.Spec.Model.Path)}
-	args = append(args, validationConfigToArgs(rhmv.Spec.Config)...)
+	args = append(args, validationConfigToArgs(logger, rhmv.Spec.Config)...)
 
-	pod.Spec.InitContainers = append(pod.Spec.InitContainers, corev1.Container{
+	pp := pod.DeepCopy()
+	vm := []corev1.VolumeMount{}
+	for _, c := range pod.Spec.Containers {
+		vm = append(vm, c.VolumeMounts...)
+	}
+	pp.Spec.InitContainers = append(pp.Spec.InitContainers, corev1.Container{
 		Name:    modelValidationInitContainerName,
 		Image:   "ghcr.io/miyunari/model-transparency-cli:latest", // TODO: get image from operator config.
 		Command: args,
+		VolumeMounts: vm,
 	})
+	marshaledPod, err := json.Marshal(pp)
+	if err != nil {
+		return admission.Errored(http.StatusInternalServerError, err)
+	}
 
-	return admission.Allowed("Init container for model validation successfully injected")
+	return admission.PatchResponseFromRaw(req.Object.Raw, marshaledPod)
 }
 
-func validationConfigToArgs(cfg v1alpha1.ValidationConfig) []string {
+func validationConfigToArgs(logger logr.Logger, cfg v1alpha1.ValidationConfig) []string {
+	logger.Info("construct args")
 	res := []string{}
 	if cfg.SigstoreConfig != nil {
+		logger.Info("found sigstore config")
 		res = append(res,
 			"sigstore",
 			"--identity", cfg.SigstoreConfig.CertificateIdentity,
@@ -84,21 +108,24 @@ func validationConfigToArgs(cfg v1alpha1.ValidationConfig) []string {
 	}
 
 	if cfg.PrivateKeyConfig != nil {
+		logger.Info("found private-key config")
 		res = append(res,
-			"pki",
+			"private-key",
 			"--public_key", cfg.PrivateKeyConfig.KeyPath,
 		)
 		return res
 	}
 
 	if cfg.PkiConfig != nil {
+		logger.Info("found pki config")
 		res = append(res,
 			"pki",
 			"--root_certs", cfg.PkiConfig.CertificateAuthority,
 		)
 		return res
 	}
+	logger.Info("missing validation config")
 	return []string{}
 }
 
-const modelValidationInitContainerName = "modelValidation"
+const modelValidationInitContainerName = "model-validation"
