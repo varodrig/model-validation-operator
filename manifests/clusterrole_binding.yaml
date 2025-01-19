@@ -6,6 +6,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: model-validation-controller-sa
+  namespace: model-validation-controller
 roleRef:
   kind: ClusterRole
   name: modelvalidation-viewer-role
