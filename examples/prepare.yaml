@@ -1,0 +1,40 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: models
+  namespace: model-validation-controller
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: download-extract-model
+  namespace: model-validation-controller
+spec:
+  template:
+    spec:
+      containers:
+        - name: download-extract
+          image: alpine:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              wget -O /data/tensorflow_saved_model.tar.gz https://github.com/slsa-framework/oss-na24-slsa-workshop-model-integrity/releases/download/v0.0.1/tensorflow_saved_model.tar.gz
+              tar -xzvf /data/tensorflow_saved_model.tar.gz -C /data
+              rm /data/tensorflow_saved_model.tar.gz
+          volumeMounts:
+            - name: model-storage
+              mountPath: /data
+      restartPolicy: Never
+      volumes:
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: models
+  backoffLimit: 3
