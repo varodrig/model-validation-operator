@@ -3,7 +3,6 @@ apiVersion: rhtas.redhat.com/v1alpha1
 kind: ModelValidation
 metadata:
   name: example
-  namespace: model-validation-controller
 spec:
   config:
     # pkiConfig:

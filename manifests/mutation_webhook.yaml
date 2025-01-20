@@ -31,7 +31,7 @@ webhooks:
         - CREATE
         - UPDATE
   sideEffects: None
-  # objectSelector:
-  #   matchExpressions:
-  #     - key: "validation.rhtas.redhat.com/ml"
-  #       operator: Exists
+  objectSelector:
+    matchExpressions:
+      - key: "validation.rhtas.redhat.com/ml"
+        operator: Exists

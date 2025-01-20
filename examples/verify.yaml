@@ -5,7 +5,6 @@ apiVersion: rhtas.redhat.com/v1alpha1
 kind: ModelValidation
 metadata:
   name: oss-na24-slasa-workshop
-  namespace: model-validation-controller
 spec:
   config:
     # pkiConfig:
@@ -23,8 +22,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: whatever-workload
-  namespace: model-validation-controller
-  annotations:
+  labels:
     validation.rhtas.redhat.com/ml: "true"
 spec:
 #  restartPolicy: Never
