@@ -72,7 +72,10 @@ func (p *podInterceptor) Handle(ctx context.Context, req admission.Request) admi
 		}
 	}
 
-	args := []string{"verify", fmt.Sprintf("--model_path=%s", rhmv.Spec.Model.Path)}
+	args := []string{"verify",
+		fmt.Sprintf("--model_path=%s", rhmv.Spec.Model.Path),
+		fmt.Sprintf("--sig_path=%s", rhmv.Spec.Model.SignaturePath),
+	}
 	args = append(args, validationConfigToArgs(logger, rhmv.Spec.Config)...)
 
 	pp := pod.DeepCopy()
@@ -82,6 +85,7 @@ func (p *podInterceptor) Handle(ctx context.Context, req admission.Request) admi
 	}
 	pp.Spec.InitContainers = append(pp.Spec.InitContainers, corev1.Container{
 		Name:    modelValidationInitContainerName,
+		ImagePullPolicy: corev1.PullAlways,
 		Image:   "ghcr.io/miyunari/model-transparency-cli:latest", // TODO: get image from operator config.
 		Command: args,
 		VolumeMounts: vm,
