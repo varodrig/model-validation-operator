@@ -46,7 +46,7 @@ func (p *podInterceptor) Handle(ctx context.Context, req admission.Request) admi
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 	// TODO: check in webhook config
-	if v := pod.Annotations["validation.rhtas.redhat.com/ml"]; v != "true" {
+	if v := pod.Labels["validation.rhtas.redhat.com/ml"]; v != "true" {
 		return admission.Allowed("no annoation found, no action needed")
 	}
 
