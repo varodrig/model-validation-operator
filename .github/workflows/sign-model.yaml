@@ -7,15 +7,30 @@ on:
 
 jobs:
   sign_model:
+    # https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/about-security-hardening-with-openid-connect
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # This is required for requesting the JWT
+      contents: read  # This is required for actions/checkout
+      packages: write
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+
+    - name: Get OIDC Token
+      id: oidc-token
+      run: |
+        # Generate the OIDC token
+        token=$(curl -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+                     "$ACTIONS_ID_TOKEN_REQUEST_URL")
+        echo "OIDC_TOKEN=$token" >> $GITHUB_ENV
 
     - name: Set up environment and sign model
+      env:
+        OIDC_TOKEN: ${{ env.OIDC_TOKEN }}
       run: |
-        docker run --rm -v $(pwd)/testdata/tensorflow_saved_model:/tensorflow_saved_model:z -w /tensorflow_saved_model ghcr.io/miyunari/model-transparency-cli:latest sign --model_path=/tensorflow_saved_model sigstore --identity-token ${{ secrets.GITHUB_TOKEN }}
+        docker run --rm -v $(pwd)/testdata/tensorflow_saved_model:/tensorflow_saved_model:z -w /tensorflow_saved_model ghcr.io/miyunari/model-transparency-cli:latest sign --model_path=/tensorflow_saved_model sigstore --identity-token "$OIDC_TOKEN"
 
     - name: Create tar.gz of the signed model
       run: |
