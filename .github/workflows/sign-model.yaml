@@ -1,0 +1,29 @@
+name: Sign Model Tensorflow Saved Model
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sign_model:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up environment and sign model
+      run: |
+        docker run --rm -it -v $(pwd)/testdata/tensorflow_saved_model:/tensorflow_saved_model:z -w /tensorflow_saved_model ghcr.io/miyunari/model-transparency-cli:latest sign --model_path=/tensorflow_saved_model sigstore --identity-token ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create tar.gz of the signed model
+      run: |
+        tar -czvf signed_model.tar.gz -C $(pwd)/testdata/tensorflow_saved_model .
+
+    - name: Upload signed model as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: signed-model
+        path: signed_model.tar.gz
+
