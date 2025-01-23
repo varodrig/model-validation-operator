@@ -15,7 +15,7 @@ jobs:
 
     - name: Set up environment and sign model
       run: |
-        docker run --rm -it -v $(pwd)/testdata/tensorflow_saved_model:/tensorflow_saved_model:z -w /tensorflow_saved_model ghcr.io/miyunari/model-transparency-cli:latest sign --model_path=/tensorflow_saved_model sigstore --identity-token ${{ secrets.GITHUB_TOKEN }}
+        docker run --rm -v $(pwd)/testdata/tensorflow_saved_model:/tensorflow_saved_model:z -w /tensorflow_saved_model ghcr.io/miyunari/model-transparency-cli:latest sign --model_path=/tensorflow_saved_model sigstore --identity-token ${{ secrets.GITHUB_TOKEN }}
 
     - name: Create tar.gz of the signed model
       run: |
