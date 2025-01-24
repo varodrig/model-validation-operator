@@ -1,9 +1,9 @@
 name: Sign Model Tensorflow Saved Model
 
 on:
-  push:
-    branches:
-      - main
+  release:
+    types:
+      - published
 
 jobs:
   sign_model:
