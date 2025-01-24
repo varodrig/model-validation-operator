@@ -26,15 +26,6 @@ jobs:
                     "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sigstore" | jq -r '.value')
         echo "OIDC_TOKEN=$token" >> $GITHUB_ENV
 
-    - name: Debug OIDC Token
-      env:
-        OIDC_TOKEN: ${{ env.OIDC_TOKEN }}
-      run: |
-        echo $OIDC_TOKEN | cut -d. -f2 | base64 -d | jq .
-        echo "OIDC Token is: $OIDC_TOKEN"
-        echo "Token length: ${#OIDC_TOKEN}"
-        echo $OIDC_TOKEN | cut -c1-100
-
     - name: Set up environment and sign model
       env:
         OIDC_TOKEN: ${{ env.OIDC_TOKEN }}
