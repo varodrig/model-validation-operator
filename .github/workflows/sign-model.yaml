@@ -30,7 +30,7 @@ jobs:
       env:
         OIDC_TOKEN: ${{ env.OIDC_TOKEN }}
       run: |
-        docker run --rm -v $(pwd)/testdata/tensorflow_saved_model:/tensorflow_saved_model:z -w /tensorflow_saved_model ghcr.io/miyunari/model-transparency-cli:latest sign --model_path=/tensorflow_saved_model sigstore --identity-token "$OIDC_TOKEN"
+        docker run --rm -v $(pwd)/testdata/tensorflow_saved_model:/tensorflow_saved_model:z -w /tensorflow_saved_model ghcr.io/miyunari/model-transparency-cli:latest sign --sig_out=/tensorflow_saved_model/model.sig --model_path=/tensorflow_saved_model sigstore --identity-token "$OIDC_TOKEN"
 
     - name: Create tar.gz of the signed model
       run: |
