@@ -24,7 +24,7 @@ spec:
             - /bin/sh
             - -c
             - |
-              wget -O /data/tensorflow_saved_model.tar.gz https://github.com/slsa-framework/oss-na24-slsa-workshop-model-integrity/releases/download/v0.0.1/tensorflow_saved_model.tar.gz
+              wget -O /data/tensorflow_saved_model.tar.gz https://github.com/miyunari/model-validation-controller/releases/download/v0.0.1/signed_model.tar.gz
               tar -xzvf /data/tensorflow_saved_model.tar.gz -C /data
               rm /data/tensorflow_saved_model.tar.gz
           volumeMounts:

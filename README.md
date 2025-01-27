@@ -55,7 +55,7 @@ metadata:
 spec:
   config:
     sigstoreConfig:
-      certificateIdentity: "nolear@redhat.com"
+      certificateIdentity: "https://github.com/miyunari/model-validation-controller/.github/workflows/sign-model.yaml@refs/tags/v0.0.2"
       certificateOidcIssuer: "https://token.actions.githubusercontent.com"
   model:
     path: /data/tensorflow_saved_model
@@ -107,15 +107,47 @@ kubectl apply -f examples/verify.yaml
 
 After the example installation, the logs of the generated job should show a successful download:
 ```bash
-kubectl logs -n testing job/download-extract-model 
+$ kubectl logs -n testing job/download-extract-model 
+Connecting to github.com (140.82.121.3:443)
+Connecting to objects.githubusercontent.com (185.199.108.133:443)
+saving to '/data/tensorflow_saved_model.tar.gz'
+tensorflow_saved_mod  44% |**************                  | 3983k  0:00:01 ETA
+tensorflow_saved_mod 100% |********************************| 8952k  0:00:00 ETA
+'/data/tensorflow_saved_model.tar.gz' saved
+./
+./model.sig
+./variables/
+./variables/variables.data-00000-of-00001
+./variables/variables.index
+./saved_model.pb
+./fingerprint.pb
 ```
 
 The controller logs should show that a pod has been modified:
 ```bash
-kubectl logs -n model-validation-controller deploy/model-validation-controller
+$ kubectl logs -n model-validation-controller deploy/model-validation-controller
+time=2025-01-20T22:13:05.051Z level=INFO msg="Starting webhook server on :8080"
+time=2025-01-20T22:13:47.556Z level=INFO msg="new request, path: /webhook"
+time=2025-01-20T22:13:47.557Z level=INFO msg="Execute webhook"
+time=2025-01-20T22:13:47.560Z level=INFO msg="Search associated Model Validation CR" pod=whatever-workload namespace=model-validation-controller
+time=2025-01-20T22:13:47.591Z level=INFO msg="construct args"
+time=2025-01-20T22:13:47.591Z level=INFO msg="found sigstore config"
 ```
 
 Finally, the test pod should be running and the injected initcontainer should have been successfully validated.
 ```bash
-kubectl logs -n testing whatever-workload model-validation
+$ kubectl logs -n testing whatever-workload model-validation
+INFO:__main__:Creating verifier for sigstore
+INFO:tuf.api._payload:No signature for keyid f5312f542c21273d9485a49394386c4575804770667f2ddb59b3bf0669fddd2f
+INFO:tuf.api._payload:No signature for keyid ff51e17fcf253119b7033f6f57512631da4a0969442afcf9fc8b141c7f2be99c
+INFO:tuf.api._payload:No signature for keyid ff51e17fcf253119b7033f6f57512631da4a0969442afcf9fc8b141c7f2be99c
+INFO:tuf.api._payload:No signature for keyid ff51e17fcf253119b7033f6f57512631da4a0969442afcf9fc8b141c7f2be99c
+INFO:tuf.api._payload:No signature for keyid ff51e17fcf253119b7033f6f57512631da4a0969442afcf9fc8b141c7f2be99c
+INFO:__main__:Verifying model signature from /data/model.sig
+INFO:__main__:all checks passed
 ```
+In case the workload is modified, is not executed:
+```bash
+ERROR:__main__:verification failed: the manifests do not match
+```
+

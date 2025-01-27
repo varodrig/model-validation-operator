@@ -12,11 +12,11 @@ spec:
     # privateKeyConfig:
     #   keyPath: /root/pub.key
     sigstoreConfig:
-      certificateIdentity: "laurentsimon@google.com"
-      certificateOidcIssuer: "https://accounts.google.com"
+      certificateIdentity: "https://github.com/miyunari/model-validation-controller/.github/workflows/sign-model.yaml@refs/tags/v0.0.2"
+      certificateOidcIssuer: "https://token.actions.githubusercontent.com"
   model:
-    path: /data/tensorflow_saved_model
-    signaturePath: /data/tensorflow_saved_model/model.sig
+    path: /data
+    signaturePath: /data/model.sig
 ---
 apiVersion: v1
 kind: Pod
