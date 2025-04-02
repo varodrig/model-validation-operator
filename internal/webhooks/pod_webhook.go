@@ -1,4 +1,4 @@
-package main
+package webhooks
 
 import (
 	"context"
@@ -16,8 +16,8 @@ import (
 	v1alpha1 "github.com/miyunari/model-validation-controller/api/v1alpha1"
 )
 
-// NewPodInterceptorWebhook creates a new pod mutating webhook to be registered
-func NewPodInterceptorWebhook(c client.Client, decoder admission.Decoder) webhook.AdmissionHandler {
+// NewPodInterceptor creates a new pod mutating webhook to be registered
+func NewPodInterceptor(c client.Client, decoder admission.Decoder) webhook.AdmissionHandler {
 	return &podInterceptor{
 		client:  c,
 		decoder: decoder,
