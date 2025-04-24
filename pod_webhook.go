@@ -19,7 +19,7 @@ import (
 // NewPodInterceptorWebhook creates a new pod mutating webhook to be registered
 func NewPodInterceptorWebhook(c client.Client, decoder admission.Decoder) webhook.AdmissionHandler {
 	return &podInterceptor{
-		client: c,
+		client:  c,
 		decoder: decoder,
 	}
 }
@@ -72,11 +72,9 @@ func (p *podInterceptor) Handle(ctx context.Context, req admission.Request) admi
 		}
 	}
 
-	args := []string{"verify",
-		fmt.Sprintf("--model_path=%s", rhmv.Spec.Model.Path),
-		fmt.Sprintf("--sig_path=%s", rhmv.Spec.Model.SignaturePath),
-	}
-	args = append(args, validationConfigToArgs(logger, rhmv.Spec.Config)...)
+	args := []string{"verify"}
+	args = append(args, validationConfigToArgs(logger, rhmv.Spec.Config, rhmv.Spec.Model.SignaturePath)...)
+	args = append(args, rhmv.Spec.Model.Path)
 
 	pp := pod.DeepCopy()
 	vm := []corev1.VolumeMount{}
@@ -84,11 +82,12 @@ func (p *podInterceptor) Handle(ctx context.Context, req admission.Request) admi
 		vm = append(vm, c.VolumeMounts...)
 	}
 	pp.Spec.InitContainers = append(pp.Spec.InitContainers, corev1.Container{
-		Name:    modelValidationInitContainerName,
+		Name:            modelValidationInitContainerName,
 		ImagePullPolicy: corev1.PullAlways,
-		Image:   "ghcr.io/miyunari/model-transparency-cli:latest", // TODO: get image from operator config.
-		Command: args,
-		VolumeMounts: vm,
+		Image:           "ghcr.io/sigstore/model-transparency-cli:v1.0.1", // TODO: get image from operator config.
+		Command:         []string{"/usr/local/bin/model_signing"},
+		Args:            args,
+		VolumeMounts:    vm,
 	})
 	marshaledPod, err := json.Marshal(pp)
 	if err != nil {
@@ -98,15 +97,16 @@ func (p *podInterceptor) Handle(ctx context.Context, req admission.Request) admi
 	return admission.PatchResponseFromRaw(req.Object.Raw, marshaledPod)
 }
 
-func validationConfigToArgs(logger logr.Logger, cfg v1alpha1.ValidationConfig) []string {
+func validationConfigToArgs(logger logr.Logger, cfg v1alpha1.ValidationConfig, signaturePath string) []string {
 	logger.Info("construct args")
 	res := []string{}
 	if cfg.SigstoreConfig != nil {
 		logger.Info("found sigstore config")
 		res = append(res,
 			"sigstore",
+			fmt.Sprintf("--signature=%s", signaturePath),
 			"--identity", cfg.SigstoreConfig.CertificateIdentity,
-			"--identity-provider", cfg.SigstoreConfig.CertificateOidcIssuer,
+			"--identity_provider", cfg.SigstoreConfig.CertificateOidcIssuer,
 		)
 		return res
 	}
@@ -114,7 +114,8 @@ func validationConfigToArgs(logger logr.Logger, cfg v1alpha1.ValidationConfig) [
 	if cfg.PrivateKeyConfig != nil {
 		logger.Info("found private-key config")
 		res = append(res,
-			"private-key",
+			"key",
+			fmt.Sprintf("--signature=%s", signaturePath),
 			"--public_key", cfg.PrivateKeyConfig.KeyPath,
 		)
 		return res
@@ -123,8 +124,9 @@ func validationConfigToArgs(logger logr.Logger, cfg v1alpha1.ValidationConfig) [
 	if cfg.PkiConfig != nil {
 		logger.Info("found pki config")
 		res = append(res,
-			"pki",
-			"--root_certs", cfg.PkiConfig.CertificateAuthority,
+			"certificate",
+			fmt.Sprintf("--signature=%s", signaturePath),
+			"--certificate_chain", cfg.PkiConfig.CertificateAuthority,
 		)
 		return res
 	}
