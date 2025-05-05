@@ -1,11 +1,7 @@
 name: Sign Model Tensorflow Saved Model
 
 on:
-  workflow_dispatch:  # Allow manual triggering from the GitHub UI
-  push:
-    branches:
-      - main         # Trigger on pushes to main branch
-  pull_request:       # Trigger when a PR is opened or updated
+  workflow_dispatch:
   release:
     types:
       - published
@@ -29,15 +25,13 @@ jobs:
         # Generate the OIDC token with a specific audience
         token=$(curl -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
                     "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sigstore" | jq -r '.value')
-        # echo "OIDC_TOKEN=$token" >> $GITHUB_ENV
-        echo "::add-mask::$token"
-        echo "$token" > oidc_token.txt
+        echo "OIDC_TOKEN=$token" >> $GITHUB_ENV
 
     - name: Set up environment and sign model
       env:
         OIDC_TOKEN: ${{ env.OIDC_TOKEN }}
       run: |
-        docker run --rm -v $(pwd)/testdata/tensorflow_saved_model:/tensorflow_saved_model:z -w /tensorflow_saved_model ghcr.io/miyunari/model-transparency-cli:latest sign sigstore --signature="/tensorflow_saved_model/model.sig" --identity_token "$OIDC_TOKEN" /tensorflow_saved_model
+        docker run --rm -v $(pwd)/testdata/tensorflow_saved_model:/tensorflow_saved_model:z -w /tensorflow_saved_model ghcr.io/sigstore/model-transparency-cli:v1.0.1 sign sigstore --signature="/tensorflow_saved_model/model.sig" --identity_token "$OIDC_TOKEN" /tensorflow_saved_model
 
     - name: Create tar.gz of the signed model
       run: |
@@ -48,11 +42,3 @@ jobs:
       with:
         name: signed-model
         path: signed_model.tar.gz
-  
-    - name: Upload OIDC token as artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: oidc-token
-        path: oidc_token.txt
-        retention-days: 1
-
