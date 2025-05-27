@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/sigstore/model-validation-controller/internal/constants"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -84,7 +85,7 @@ func (p *podInterceptor) Handle(ctx context.Context, req admission.Request) admi
 	pp.Spec.InitContainers = append(pp.Spec.InitContainers, corev1.Container{
 		Name:            modelValidationInitContainerName,
 		ImagePullPolicy: corev1.PullAlways,
-		Image:           "ghcr.io/sigstore/model-transparency-cli:v1.0.1", // TODO: get image from operator config.
+		Image:           constants.ModelTransparencyCliImage,
 		Command:         []string{"/usr/local/bin/model_signing"},
 		Args:            args,
 		VolumeMounts:    vm,
