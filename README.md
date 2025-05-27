@@ -19,14 +19,14 @@ This project is a proof of concept based on the [sigstore/model-transperency-cli
 
 The controller can be installed in the `model-validation-controller` namespace via [kustomize](https://kustomize.io/).
 ```bash
-kubectl apply -k https://raw.githubusercontent.com/miyunari/model-validation-controller/main/manifests
+kubectl apply -k https://raw.githubusercontent.com/sigstore/model-validation-operator/main/manifests
 # or local
 kubectl apply -k manifests
 ```
 
 Run delete to uninstall the controller.
 ```bash
-kubectl delete -k https://raw.githubusercontent.com/miyunari/model-validation-controller/main/manifests
+kubectl delete -k https://raw.githubusercontent.com/sigstore/model-validation-operator/main/manifests
 # or local
 kubectl delete -k manifests
 ```
@@ -84,7 +84,7 @@ metadata:
 spec:
   config:
     sigstoreConfig:
-      certificateIdentity: "https://github.com/miyunari/model-validation-controller/.github/workflows/sign-model.yaml@refs/tags/v0.0.2"
+      certificateIdentity: "https://github.com/sigstore/model-validation-operator/.github/workflows/sign-model.yaml@refs/tags/v0.0.2"
       certificateOidcIssuer: "https://token.actions.githubusercontent.com"
   model:
     path: /data/tensorflow_saved_model
@@ -123,13 +123,13 @@ The example folder contains two files `prepare.yaml` and `signed.yaml`.
 
 - prepare: contains a persistent volume claim and a job that downloads a signed test model.
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/miyunari/model-validation-controller/main/examples/prepare.yaml
+kubectl apply -f https://raw.githubusercontent.com/sigstore/model-validation-operator/main/examples/prepare.yaml
 # or local
 kubectl apply -f examples/prepare.yaml
 ```
 - signed: contains a model validation manifest for the validation of this model and a demo pod, which is provided with the appropriate label for validation.
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/miyunari/model-validation-controller/main/examples/verify.yaml
+kubectl apply -f https://raw.githubusercontent.com/sigstore/model-validation-operator/main/examples/verify.yaml
 # or local
 kubectl apply -f examples/verify.yaml
 ```

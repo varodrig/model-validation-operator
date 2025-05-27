@@ -1,4 +1,4 @@
-module github.com/miyunari/model-validation-controller
+module github.com/sigstore/model-validation-controller
 
 go 1.23.0
 

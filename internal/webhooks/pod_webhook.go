@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/go-logr/logr"
-	v1alpha1 "github.com/miyunari/model-validation-controller/api/v1alpha1"
+	"github.com/sigstore/model-validation-controller/api/v1alpha1"
 )
 
 // NewPodInterceptor creates a new pod mutating webhook to be registered
