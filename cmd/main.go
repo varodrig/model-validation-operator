@@ -21,11 +21,14 @@ import (
 	"flag"
 	"os"
 
+	"github.com/sigstore/model-validation-controller/internal/constants"
+	"github.com/sigstore/model-validation-controller/internal/utils"
+
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	"github.com/miyunari/model-validation-controller/internal/webhooks"
+	"github.com/sigstore/model-validation-controller/internal/webhooks"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -37,7 +40,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	mlv1alpha1 "github.com/miyunari/model-validation-controller/api/v1alpha1"
+	mlv1alpha1 "github.com/sigstore/model-validation-controller/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -70,6 +73,7 @@ func main() {
 		"If set, the metrics endpoint is served securely via HTTPS. Use --metrics-secure=false to use HTTP instead.")
 	flag.BoolVar(&enableHTTP2, "enable-http2", false,
 		"If set, HTTP/2 will be enabled for the metrics and webhook servers")
+	utils.StringFlagOrEnv(&constants.ModelTransparencyCliImage, "model-transparency-cli-image", "MODEL_TRANSPARENCY_CLI_IMAGE", constants.ModelTransparencyCliImage, "Model transparency CLI image to be used.")
 	opts := zap.Options{
 		Development: true,
 	}

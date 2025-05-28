@@ -19,7 +19,7 @@ spec:
       serviceAccountName: model-validation-controller-sa
       containers:
       - name: model-validation-controller
-        image: ghcr.io/miyunari/model-validation-controller:v1.0.1
+        image: ghcr.io/sigstore/model-validation-controller:v1.0.1
         ports:
         - containerPort: 8080
         volumeMounts:
