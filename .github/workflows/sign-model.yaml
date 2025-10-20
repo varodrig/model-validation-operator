@@ -31,11 +31,11 @@ jobs:
       env:
         OIDC_TOKEN: ${{ env.OIDC_TOKEN }}
       run: |
-        docker run --rm -v $(pwd)/testdata/tensorflow_saved_model:/tensorflow_saved_model:z -w /tensorflow_saved_model ghcr.io/sigstore/model-transparency-cli:v1.0.1 sign sigstore --signature="/tensorflow_saved_model/model.sig" --identity_token "$OIDC_TOKEN" /tensorflow_saved_model
+        docker run --rm -v $(pwd)/demo/signed_model:/signed_model:z -w /signed_model ghcr.io/sigstore/model-transparency-cli:v1.0.1 sign sigstore --signature="/signed_model/model.sig" --identity_token "$OIDC_TOKEN" /signed_model
 
     - name: Create tar.gz of the signed model
       run: |
-        tar -czvf signed_model.tar.gz -C $(pwd)/testdata/tensorflow_saved_model .
+        tar -czvf signed_model.tar.gz -C $(pwd)/demo/signed_model .
 
     - name: Upload signed model as artifact
       uses: actions/upload-artifact@v4
